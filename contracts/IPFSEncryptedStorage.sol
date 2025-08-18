@@ -223,28 +223,4 @@ contract IPFSEncryptedStorage is SepoliaConfig {
     function getCurrentId() external view returns (uint256 currentId) {
         return _currentId;
     }
-
-    /// @notice Stores IPFS hash and returns encrypted data in one transaction
-    /// @param ipfsHash The IPFS hash string
-    /// @param encryptedAddr1 First encrypted address (derived from hash)
-    /// @param encryptedAddr2 Second encrypted address (derived from hash)
-    /// @param encryptedAddr3 Third encrypted address (derived from hash)
-    /// @param inputProof Input proof for external encrypted data
-    /// @return storageId The ID of the stored data
-    function storeIPFSHash(
-        string memory ipfsHash,
-        externalEaddress encryptedAddr1,
-        externalEaddress encryptedAddr2,
-        externalEaddress encryptedAddr3,
-        bytes calldata inputProof
-    ) external returns (uint256 storageId) {
-        // Verify that the encrypted addresses match the hash
-        (address addr1, address addr2, address addr3) = ipfsHashToAddresses(ipfsHash);
-
-        // Store the encrypted data
-        storageId = storeEncryptedIPFSData(encryptedAddr1, encryptedAddr2, encryptedAddr3, inputProof);
-
-        // Note: In practice, you might want to verify that the encrypted addresses
-        // correspond to addr1, addr2, and addr3, but this would require decryption
-    }
 }
