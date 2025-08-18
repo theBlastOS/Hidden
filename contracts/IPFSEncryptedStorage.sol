@@ -10,6 +10,7 @@ contract IPFSEncryptedStorage is SepoliaConfig {
     struct EncryptedIPFSData {
         eaddress encryptedAddress1;
         eaddress encryptedAddress2;
+        eaddress encryptedAddress3;
         address owner;
         bool exists;
     }
@@ -31,68 +32,89 @@ contract IPFSEncryptedStorage is SepoliaConfig {
     event AccessGranted(uint256 indexed storageId, address indexed user, address indexed grantor);
     event AccessRevoked(uint256 indexed storageId, address indexed user, address indexed revoker);
 
-    /// @notice Converts an IPFS hash string to two addresses
-    /// @param ipfsHash The IPFS hash as a string (without "Qm" prefix)
-    /// @return addr1 First address derived from the hash
-    /// @return addr2 Second address derived from the hash
-    function ipfsHashToAddresses(string memory ipfsHash) public pure returns (address addr1, address addr2) {
+    /// @notice Converts an IPFS hash string to three addresses
+    /// @param ipfsHash The IPFS hash as a string (without "Qm" prefix, 46 chars)
+    /// @return addr1 First address containing first 20 bytes of hash
+    /// @return addr2 Second address containing next 20 bytes (bytes 20-39)
+    /// @return addr3 Third address containing remaining 6 bytes (bytes 40-45) + padding
+    function ipfsHashToAddresses(
+        string memory ipfsHash
+    ) public pure returns (address addr1, address addr2, address addr3) {
         bytes memory hashBytes = bytes(ipfsHash);
-        require(hashBytes.length >= 32, "IPFS hash too short");
+        require(hashBytes.length >= 46, "IPFS hash too short (need exactly 46 chars)");
 
-        // Take first 20 bytes for address1
-        bytes20 addr1Bytes;
-        for (uint i = 0; i < 20; i++) {
-            addr1Bytes |= bytes20(hashBytes[i] & 0xFF) >> (i * 8);
+        // Store first 20 bytes in addr1
+        uint160 addr1Value = 0;
+        for (uint256 i = 0; i < 20; i++) {
+            addr1Value = addr1Value | (uint160(uint8(hashBytes[19 - i])) << uint256(i * 8));
         }
-        addr1 = address(addr1Bytes);
+        addr1 = address(addr1Value);
 
-        // Take next 12 bytes + first 8 bytes again for address2
-        bytes20 addr2Bytes;
-        for (uint i = 0; i < 12; i++) {
-            addr2Bytes |= bytes20(hashBytes[i + 20] & 0xFF) >> (i * 8);
+        // Store next 20 bytes (20-39) in addr2
+        uint160 addr2Value = 0;
+        for (uint256 i = 0; i < 20; i++) {
+            addr2Value = addr2Value | (uint160(uint8(hashBytes[39 - i])) << uint256(i * 8));
         }
-        for (uint i = 0; i < 8; i++) {
-            addr2Bytes |= bytes20(hashBytes[i] & 0xFF) >> ((i + 12) * 8);
+        addr2 = address(addr2Value);
+
+        // Store remaining 6 bytes (40-45) in addr3, padded with zeros
+        uint160 addr3Value = 0;
+        for (uint256 i = 0; i < 6; i++) {
+            addr3Value = addr3Value | (uint160(uint8(hashBytes[45 - i])) << uint256(i * 8));
         }
-        addr2 = address(addr2Bytes);
+        addr3 = address(addr3Value);
     }
 
-    /// @notice Converts two addresses back to IPFS hash
-    /// @param addr1 First address
-    /// @param addr2 Second address
-    /// @return ipfsHash Reconstructed IPFS hash string
-    function addressesToIPFSHash(address addr1, address addr2) public pure returns (string memory ipfsHash) {
-        bytes20 addr1Bytes = bytes20(addr1);
-        bytes20 addr2Bytes = bytes20(addr2);
+    /// @notice Converts three addresses back to IPFS hash (reverse of ipfsHashToAddresses)
+    /// @param addr1 First address containing first 20 bytes
+    /// @param addr2 Second address containing bytes 20-39
+    /// @param addr3 Third address containing bytes 40-45
+    /// @return ipfsHash Reconstructed IPFS hash string (46 bytes total)
+    function addressesToIPFSHash(
+        address addr1,
+        address addr2,
+        address addr3
+    ) public pure returns (string memory ipfsHash) {
+        bytes memory result = new bytes(46);
 
-        bytes memory result = new bytes(32);
+        uint160 addr1Value = uint160(addr1);
+        uint160 addr2Value = uint160(addr2);
+        uint160 addr3Value = uint160(addr3);
 
-        // Extract first 20 bytes from addr1
-        for (uint i = 0; i < 20; i++) {
-            result[i] = addr1Bytes[i];
+        // Extract first 20 bytes from addr1 (reverse the packing process)
+        for (uint256 i = 0; i < 20; i++) {
+            result[19 - i] = bytes1(uint8(addr1Value >> uint256(i * 8)));
         }
 
-        // Extract first 12 bytes from addr2 for positions 20-31
-        for (uint i = 0; i < 12; i++) {
-            result[i + 20] = addr2Bytes[i];
+        // Extract next 20 bytes from addr2 (bytes 20-39)
+        for (uint256 i = 0; i < 20; i++) {
+            result[39 - i] = bytes1(uint8(addr2Value >> uint256(i * 8)));
+        }
+
+        // Extract final 6 bytes from addr3 (bytes 40-45)
+        for (uint256 i = 0; i < 6; i++) {
+            result[45 - i] = bytes1(uint8(addr3Value >> uint256(i * 8)));
         }
 
         ipfsHash = string(result);
     }
 
-    /// @notice Stores encrypted IPFS data (two addresses) with Zama encryption
+    /// @notice Stores encrypted IPFS data (three addresses) with Zama encryption
     /// @param encryptedAddr1 First encrypted address
     /// @param encryptedAddr2 Second encrypted address
+    /// @param encryptedAddr3 Third encrypted address
     /// @param inputProof Input proof for external encrypted data
     /// @return storageId The ID of the stored data
     function storeEncryptedIPFSData(
         externalEaddress encryptedAddr1,
         externalEaddress encryptedAddr2,
+        externalEaddress encryptedAddr3,
         bytes calldata inputProof
-    ) external returns (uint256 storageId) {
+    ) public returns (uint256 storageId) {
         // Convert external encrypted inputs to internal encrypted addresses
         eaddress addr1 = FHE.fromExternal(encryptedAddr1, inputProof);
         eaddress addr2 = FHE.fromExternal(encryptedAddr2, inputProof);
+        eaddress addr3 = FHE.fromExternal(encryptedAddr3, inputProof);
 
         // Increment storage ID
         _currentId++;
@@ -102,6 +124,7 @@ contract IPFSEncryptedStorage is SepoliaConfig {
         _encryptedStorage[storageId] = EncryptedIPFSData({
             encryptedAddress1: addr1,
             encryptedAddress2: addr2,
+            encryptedAddress3: addr3,
             owner: msg.sender,
             exists: true
         });
@@ -109,8 +132,10 @@ contract IPFSEncryptedStorage is SepoliaConfig {
         // Grant permissions for contract and owner
         FHE.allowThis(addr1);
         FHE.allowThis(addr2);
+        FHE.allowThis(addr3);
         FHE.allow(addr1, msg.sender);
         FHE.allow(addr2, msg.sender);
+        FHE.allow(addr3, msg.sender);
 
         // Add to user's storage IDs
         _userStorageIds[msg.sender].push(storageId);
@@ -131,6 +156,7 @@ contract IPFSEncryptedStorage is SepoliaConfig {
         // Grant FHE permissions to the user
         FHE.allow(_encryptedStorage[storageId].encryptedAddress1, user);
         FHE.allow(_encryptedStorage[storageId].encryptedAddress2, user);
+        FHE.allow(_encryptedStorage[storageId].encryptedAddress3, user);
 
         emit AccessGranted(storageId, user, msg.sender);
     }
@@ -151,7 +177,10 @@ contract IPFSEncryptedStorage is SepoliaConfig {
     /// @param storageId The storage ID
     /// @return addr1 First encrypted address
     /// @return addr2 Second encrypted address
-    function getEncryptedAddresses(uint256 storageId) external view returns (eaddress addr1, eaddress addr2) {
+    /// @return addr3 Third encrypted address
+    function getEncryptedAddresses(
+        uint256 storageId
+    ) external view returns (eaddress addr1, eaddress addr2, eaddress addr3) {
         require(_encryptedStorage[storageId].exists, "Storage ID does not exist");
         require(
             _encryptedStorage[storageId].owner == msg.sender || _authorizedUsers[storageId][msg.sender],
@@ -159,7 +188,7 @@ contract IPFSEncryptedStorage is SepoliaConfig {
         );
 
         EncryptedIPFSData memory data = _encryptedStorage[storageId];
-        return (data.encryptedAddress1, data.encryptedAddress2);
+        return (data.encryptedAddress1, data.encryptedAddress2, data.encryptedAddress3);
     }
 
     /// @notice Checks if a user has access to a storage ID
@@ -199,21 +228,23 @@ contract IPFSEncryptedStorage is SepoliaConfig {
     /// @param ipfsHash The IPFS hash string
     /// @param encryptedAddr1 First encrypted address (derived from hash)
     /// @param encryptedAddr2 Second encrypted address (derived from hash)
+    /// @param encryptedAddr3 Third encrypted address (derived from hash)
     /// @param inputProof Input proof for external encrypted data
     /// @return storageId The ID of the stored data
     function storeIPFSHash(
         string memory ipfsHash,
         externalEaddress encryptedAddr1,
         externalEaddress encryptedAddr2,
+        externalEaddress encryptedAddr3,
         bytes calldata inputProof
     ) external returns (uint256 storageId) {
         // Verify that the encrypted addresses match the hash
-        (address addr1, address addr2) = ipfsHashToAddresses(ipfsHash);
+        (address addr1, address addr2, address addr3) = ipfsHashToAddresses(ipfsHash);
 
         // Store the encrypted data
-        // storageId = storeEncryptedIPFSData(encryptedAddr1, encryptedAddr2, inputProof);
+        storageId = storeEncryptedIPFSData(encryptedAddr1, encryptedAddr2, encryptedAddr3, inputProof);
 
         // Note: In practice, you might want to verify that the encrypted addresses
-        // correspond to addr1 and addr2, but this would require decryption
+        // correspond to addr1, addr2, and addr3, but this would require decryption
     }
 }
