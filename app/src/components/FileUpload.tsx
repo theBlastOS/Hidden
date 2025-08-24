@@ -18,23 +18,19 @@ export function FileUpload({ onUploadSuccess, isLoading }: FileUploadProps) {
     const fileName = file.name.replace(/\W/g, '');
     const size = file.size.toString();
     
+    // Base58 字符集（不包含 0、O、I、l 等容易混淆的字符）
+    const base58Chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+    
     // 使用文件信息生成一个看起来像IPFS hash的字符串
     const hashData = `${timestamp}${fileName}${size}`;
     let hash = 'Qm';
     
-    // 生成44个字符的伪hash（IPFS hash总长度是46，去掉Qm前缀）
-    for (let i = 0; i < 44; i++) {
+    // 生成46个字符的伪hash（IPFS hash总长度是48，去掉Qm前缀是46）
+    for (let i = 0; i < 46; i++) {
       const charCode = hashData.charCodeAt(i % hashData.length);
       const randomOffset = Math.floor(Math.random() * 10);
-      const finalCode = (charCode + randomOffset + i) % 62;
-      
-      if (finalCode < 10) {
-        hash += String.fromCharCode(48 + finalCode); // 0-9
-      } else if (finalCode < 36) {
-        hash += String.fromCharCode(65 + finalCode - 10); // A-Z
-      } else {
-        hash += String.fromCharCode(97 + finalCode - 36); // a-z
-      }
+      const finalIndex = (charCode + randomOffset + i) % base58Chars.length;
+      hash += base58Chars[finalIndex];
     }
     
     return hash;
