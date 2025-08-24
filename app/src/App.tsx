@@ -44,14 +44,9 @@ function App() {
     }
   };
 
-  const handleFileUploadSuccess = async (ipfsHash: string) => {
-    try {
-      const txHash = await storeIPFSHash(ipfsHash);
-      console.log(`File uploaded and IPFS hash stored! Transaction: ${txHash}`);
-    } catch (error) {
-      console.error('Failed to store uploaded file hash:', error);
-      alert(`File uploaded but failed to store on blockchain: ${(error as Error).message}`);
-    }
+  const handleFileUploadSuccess = (ipfsHash: string) => {
+    // 只显示hash，不自动存储到区块链
+    console.log(`File uploaded successfully! IPFS Hash: ${ipfsHash}`);
   };
 
   const handleRetrieveIPFS = async (storageId: number): Promise<string> => {

@@ -9,6 +9,7 @@ export function FileUpload({ onUploadSuccess, isLoading }: FileUploadProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [generatedHash, setGeneratedHash] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 生成伪IPFS hash
@@ -64,6 +65,8 @@ export function FileUpload({ onUploadSuccess, isLoading }: FileUploadProps) {
     }
 
     setSelectedFile(file);
+    // 清除之前的hash显示
+    setGeneratedHash('');
   };
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -104,18 +107,32 @@ export function FileUpload({ onUploadSuccess, isLoading }: FileUploadProps) {
       // 调用回调函数，将hash传给父组件
       onUploadSuccess(ipfsHash);
       
-      // 重置状态
-      setSelectedFile(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+      // 设置生成的hash用于页面显示
+      setGeneratedHash(ipfsHash);
       
-      alert(`File uploaded successfully!\nIPFS Hash: ${ipfsHash}`);
     } catch (error) {
       console.error('Upload failed:', error);
       alert('Upload failed. Please try again.');
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleClearAll = () => {
+    setSelectedFile(null);
+    setGeneratedHash('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      alert('IPFS hash copied to clipboard!');
+    } catch (err) {
+      console.error('Failed to copy: ', err);
+      alert('Failed to copy to clipboard');
     }
   };
 
@@ -199,23 +216,105 @@ export function FileUpload({ onUploadSuccess, isLoading }: FileUploadProps) {
       />
 
       {/* 上传按钮 */}
-      <button
-        onClick={handleUpload}
-        disabled={!selectedFile || uploading || isLoading}
-        style={{
-          padding: '12px 24px',
-          fontSize: '16px',
-          backgroundColor: !selectedFile || uploading || isLoading ? '#6c757d' : '#28a745',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: !selectedFile || uploading || isLoading ? 'not-allowed' : 'pointer',
-          width: '100%',
-          fontWeight: 'bold'
-        }}
-      >
-        {uploading ? 'Uploading to IPFS...' : 'Upload to IPFS'}
-      </button>
+      <div style={{ display: 'flex', gap: '8px' }}>
+        <button
+          onClick={handleUpload}
+          disabled={!selectedFile || uploading || isLoading}
+          style={{
+            padding: '12px 24px',
+            fontSize: '16px',
+            backgroundColor: !selectedFile || uploading || isLoading ? '#6c757d' : '#28a745',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: !selectedFile || uploading || isLoading ? 'not-allowed' : 'pointer',
+            flex: 1,
+            fontWeight: 'bold'
+          }}
+        >
+          {uploading ? 'Uploading to IPFS...' : 'Upload to IPFS'}
+        </button>
+        
+        {(selectedFile || generatedHash) && (
+          <button
+            onClick={handleClearAll}
+            disabled={uploading || isLoading}
+            style={{
+              padding: '12px 16px',
+              fontSize: '16px',
+              backgroundColor: '#dc3545',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: uploading || isLoading ? 'not-allowed' : 'pointer',
+              fontWeight: 'bold'
+            }}
+          >
+            Clear
+          </button>
+        )}
+      </div>
+
+      {/* 生成的IPFS hash显示区域 */}
+      {generatedHash && (
+        <div style={{ 
+          marginTop: '16px', 
+          padding: '16px', 
+          backgroundColor: '#d4edda', 
+          borderRadius: '8px',
+          border: '1px solid #c3e6cb'
+        }}>
+          <h4 style={{ 
+            marginBottom: '12px', 
+            color: '#155724',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            ✅ Upload Successful!
+          </h4>
+          <div style={{ marginBottom: '12px' }}>
+            <strong style={{ color: '#155724' }}>Generated IPFS Hash:</strong>
+          </div>
+          <div style={{
+            backgroundColor: '#fff',
+            padding: '12px',
+            borderRadius: '4px',
+            border: '1px solid #c3e6cb',
+            fontFamily: 'monospace',
+            fontSize: '14px',
+            wordBreak: 'break-all',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            <span style={{ flex: 1 }}>{generatedHash}</span>
+            <button
+              onClick={() => copyToClipboard(generatedHash)}
+              style={{
+                padding: '6px 12px',
+                fontSize: '12px',
+                backgroundColor: '#28a745',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                minWidth: '60px'
+              }}
+            >
+              Copy
+            </button>
+          </div>
+          <div style={{ 
+            marginTop: '12px',
+            fontSize: '14px',
+            color: '#155724'
+          }}>
+            💡 You can now copy this hash and use it in the "Store IPFS Hash" section below to save it encrypted on the blockchain.
+          </div>
+        </div>
+      )}
 
       {/* 说明信息 */}
       <div style={{ 
