@@ -108,13 +108,14 @@ export async function decryptAddresses(
     );
 
     // Sign the decryption request
-    const signature = await signer.signTypedData(
-      eip712.domain,
-      {
+    const signature = await signer.signTypedData({
+      domain: eip712.domain,
+      types: {
         UserDecryptRequestVerification: eip712.types.UserDecryptRequestVerification,
       },
-      eip712.message
-    );
+      primaryType: 'UserDecryptRequestVerification',
+      message: eip712.message,
+    });
 
     // Perform user decryption
     const result = await fheInstance.userDecrypt(

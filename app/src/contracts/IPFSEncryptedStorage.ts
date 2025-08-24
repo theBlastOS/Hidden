@@ -306,6 +306,6 @@ export const IPFS_ENCRYPTED_STORAGE_ABI = [
 // Contract addresses (will be updated based on deployment)
 export const CONTRACT_ADDRESSES = {
   // Localhost deployment address - update for different networks
-  IPFSEncryptedStorage: '0x6b02918B26866e48Ae1869fFb63523A50fd1be62', // Localhost address
+  IPFSEncryptedStorage: '0x86dc2f27b0194942bE88371fd1c65097b92E0eD6', // Localhost address
   // For Sepolia testnet, update this address after deployment
 } as const;

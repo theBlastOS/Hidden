@@ -182,10 +182,6 @@ contract IPFSEncryptedStorage is SepoliaConfig {
         uint256 storageId
     ) external view returns (eaddress addr1, eaddress addr2, eaddress addr3) {
         require(_encryptedStorage[storageId].exists, "Storage ID does not exist");
-        require(
-            _encryptedStorage[storageId].owner == msg.sender || _authorizedUsers[storageId][msg.sender],
-            "Access denied"
-        );
 
         EncryptedIPFSData memory data = _encryptedStorage[storageId];
         return (data.encryptedAddress1, data.encryptedAddress2, data.encryptedAddress3);
@@ -195,7 +191,7 @@ contract IPFSEncryptedStorage is SepoliaConfig {
     /// @param storageId The storage ID
     /// @param user The user to check
     /// @return hasAccess True if user has access
-    function hasAccess(uint256 storageId, address user) external view returns (bool hasAccess) {
+    function hasAccess(uint256 storageId, address user) external view returns (bool) {
         if (!_encryptedStorage[storageId].exists) {
             return false;
         }
@@ -206,7 +202,7 @@ contract IPFSEncryptedStorage is SepoliaConfig {
     /// @notice Gets the owner of a storage ID
     /// @param storageId The storage ID
     /// @return owner The owner address
-    function getOwner(uint256 storageId) external view returns (address owner) {
+    function getOwner(uint256 storageId) external view returns (address) {
         require(_encryptedStorage[storageId].exists, "Storage ID does not exist");
         return _encryptedStorage[storageId].owner;
     }

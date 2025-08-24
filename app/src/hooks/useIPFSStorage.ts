@@ -33,6 +33,7 @@ export function useIPFSStorage() {
         functionName: 'getUserStorageIds',
         args: [address],
       });
+      console.log("getUserStorageIds:", storageIds);
 
       const entries: StorageEntry[] = [];
 
