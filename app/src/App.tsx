@@ -3,6 +3,7 @@ import { useAccount } from 'wagmi';
 import { useIPFSStorage } from '@/hooks/useIPFSStorage';
 import { StoreIPFS } from '@/components/StoreIPFS';
 import { StorageList } from '@/components/StorageList';
+import { FileUpload } from '@/components/FileUpload';
 import { initFHE, isFHEInitialized } from '@/utils/fheUtils';
 import { useState } from 'react';
 
@@ -40,6 +41,16 @@ function App() {
     } catch (error) {
       alert(`Failed to store IPFS hash: ${(error as Error).message}`);
       throw error;
+    }
+  };
+
+  const handleFileUploadSuccess = async (ipfsHash: string) => {
+    try {
+      const txHash = await storeIPFSHash(ipfsHash);
+      console.log(`File uploaded and IPFS hash stored! Transaction: ${txHash}`);
+    } catch (error) {
+      console.error('Failed to store uploaded file hash:', error);
+      alert(`File uploaded but failed to store on blockchain: ${(error as Error).message}`);
     }
   };
 
@@ -146,6 +157,7 @@ function App() {
                 fontSize: '16px',
                 lineHeight: '1.6'
               }}>
+                <li>📤 <strong>File Upload</strong> - Upload files directly and get IPFS hashes automatically</li>
                 <li>🔒 <strong>Fully Homomorphic Encryption</strong> - Your IPFS hashes are encrypted using Zama FHE</li>
                 <li>🗝️ <strong>Access Control</strong> - Grant and revoke access to specific users</li>
                 <li>⛓️ <strong>On-Chain Storage</strong> - Encrypted data stored securely on Ethereum Sepolia</li>
@@ -168,6 +180,9 @@ function App() {
                 <strong>Error:</strong> {error}
               </div>
             )}
+
+            {/* File Upload Section */}
+            <FileUpload onUploadSuccess={handleFileUploadSuccess} isLoading={isLoading} />
 
             {/* Store IPFS Hash Section */}
             <StoreIPFS onStore={handleStoreIPFS} isLoading={isLoading} />
