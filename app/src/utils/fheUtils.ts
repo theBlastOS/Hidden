@@ -47,7 +47,7 @@ export async function encryptAddresses(
   contractAddress: string,
   userAddress: string,
   addresses: [string, string, string]
-): Promise<{ handles: string[]; inputProof: string }> {
+): Promise<any> {
   if (!fheInstance) {
     throw new Error('FHE not initialized. Call initFHE() first.');
   }
@@ -61,6 +61,9 @@ export async function encryptAddresses(
 
   // Encrypt and return
   const result = await buffer.encrypt();
+  console.log("encryptAddresses");
+  console.log(result);
+  // `0x${Array.from(handle).map(b => b.toString(16).padStart(2, '0')).join('')}`;
   return result;
 }
 

@@ -9,7 +9,7 @@ export function useIPFSStorage() {
   const { address } = useAccount();
   const { data: walletClient } = useWalletClient();
   const publicClient = usePublicClient();
-  
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [userStorageEntries, setUserStorageEntries] = useState<StorageEntry[]>([]);
@@ -35,7 +35,7 @@ export function useIPFSStorage() {
       });
 
       const entries: StorageEntry[] = [];
-      
+
       for (const id of storageIds as bigint[]) {
         try {
           // Get owner
@@ -74,6 +74,13 @@ export function useIPFSStorage() {
     }
   };
 
+
+
+  // Convert Uint8Array handles to proper uint256 format
+  const convert = (handle: Uint8Array) => {
+    return `0x${Array.from(handle).map(b => b.toString(16).padStart(2, '0')).join('')}`;
+  }
+
   const storeIPFSHash = async (ipfsHash: string) => {
     if (!address || !walletClient || !isFHEInitialized()) {
       throw new Error('Wallet not connected or FHE not initialized');
@@ -101,16 +108,16 @@ export function useIPFSStorage() {
         abi: IPFS_ENCRYPTED_STORAGE_ABI,
         functionName: 'storeEncryptedIPFSData',
         args: [
-          encryptedData.handles[0] as `0x${string}`,
-          encryptedData.handles[1] as `0x${string}`,
-          encryptedData.handles[2] as `0x${string}`,
-          encryptedData.inputProof as `0x${string}`,
+          convert(encryptedData.handles[0]) as `0x${string}`,
+          convert(encryptedData.handles[1]) as `0x${string}`,
+          convert(encryptedData.handles[2]) as `0x${string}`,
+          convert(encryptedData.inputProof) as `0x${string}`,
         ],
         account: address,
       });
 
       const hash = await walletClient.writeContract(request);
-      
+
       // Wait for transaction confirmation
       await publicClient!.waitForTransactionReceipt({ hash });
 
