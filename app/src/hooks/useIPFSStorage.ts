@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAccount, useWalletClient, usePublicClient } from 'wagmi';
 import { IPFS_ENCRYPTED_STORAGE_ABI, CONTRACT_ADDRESSES } from '@/contracts/IPFSEncryptedStorage';
-import { encryptAddresses, decryptAddresses, initFHE } from '@/utils/fheUtils';
+import { encryptAddresses, decryptAddresses, isFHEInitialized } from '@/utils/fheUtils';
 import { ipfsHashToAddresses, addressesToIPFSHash, removeQmPrefix, addQmPrefix } from '@/utils/ipfsUtils';
 import { StorageEntry } from '@/types';
 
@@ -13,29 +13,13 @@ export function useIPFSStorage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [userStorageEntries, setUserStorageEntries] = useState<StorageEntry[]>([]);
-  const [fheInitialized, setFheInitialized] = useState(false);
-
-  // Initialize FHE on mount
-  useEffect(() => {
-    const initializeFHE = async () => {
-      try {
-        await initFHE();
-        setFheInitialized(true);
-      } catch (err) {
-        setError('Failed to initialize FHE encryption');
-        console.error('FHE initialization error:', err);
-      }
-    };
-
-    initializeFHE();
-  }, []);
 
   // Load user storage entries when address changes
   useEffect(() => {
-    if (address && publicClient && fheInitialized) {
+    if (address && publicClient && isFHEInitialized()) {
       loadUserStorageEntries();
     }
-  }, [address, publicClient, fheInitialized]);
+  }, [address, publicClient]);
 
   const loadUserStorageEntries = async () => {
     if (!address || !publicClient) return;
@@ -91,7 +75,7 @@ export function useIPFSStorage() {
   };
 
   const storeIPFSHash = async (ipfsHash: string) => {
-    if (!address || !walletClient || !fheInitialized) {
+    if (!address || !walletClient || !isFHEInitialized()) {
       throw new Error('Wallet not connected or FHE not initialized');
     }
 
@@ -144,7 +128,7 @@ export function useIPFSStorage() {
   };
 
   const retrieveIPFSHash = async (storageId: number): Promise<string> => {
-    if (!address || !walletClient || !fheInitialized) {
+    if (!address || !walletClient || !isFHEInitialized()) {
       throw new Error('Wallet not connected or FHE not initialized');
     }
 
@@ -251,7 +235,6 @@ export function useIPFSStorage() {
     isLoading,
     error,
     userStorageEntries,
-    fheInitialized,
     storeIPFSHash,
     retrieveIPFSHash,
     grantAccess,

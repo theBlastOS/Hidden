@@ -3,20 +3,35 @@ import { useAccount } from 'wagmi';
 import { useIPFSStorage } from '@/hooks/useIPFSStorage';
 import { StoreIPFS } from '@/components/StoreIPFS';
 import { StorageList } from '@/components/StorageList';
+import { initFHE, isFHEInitialized } from '@/utils/fheUtils';
+import { useState } from 'react';
 
 function App() {
   const { isConnected } = useAccount();
+  const [isInitializingFHE, setIsInitializingFHE] = useState(false);
+  const [fheInitialized, setFheInitialized] = useState(isFHEInitialized());
   const {
     isLoading,
     error,
     userStorageEntries,
-    fheInitialized,
     storeIPFSHash,
     retrieveIPFSHash,
     grantAccess,
     revokeAccess,
     refreshEntries,
   } = useIPFSStorage();
+
+  const handleInitFHE = async () => {
+    setIsInitializingFHE(true);
+    try {
+      await initFHE();
+      setFheInitialized(true);
+    } catch (error) {
+      alert(`Failed to initialize FHE: ${(error as Error).message}`);
+    } finally {
+      setIsInitializingFHE(false);
+    }
+  };
 
   const handleStoreIPFS = async (ipfsHash: string) => {
     try {
@@ -68,7 +83,39 @@ function App() {
               Securely store IPFS hashes using Zama FHE encryption
             </p>
           </div>
-          <ConnectButton />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            {isConnected && !fheInitialized && (
+              <button
+                onClick={handleInitFHE}
+                disabled={isInitializingFHE}
+                style={{
+                  backgroundColor: isInitializingFHE ? '#6c757d' : '#007bff',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '8px 16px',
+                  fontSize: '14px',
+                  cursor: isInitializingFHE ? 'not-allowed' : 'pointer',
+                  fontWeight: '500',
+                }}
+              >
+                {isInitializingFHE ? 'Initializing...' : 'Init FHE'}
+              </button>
+            )}
+            {fheInitialized && (
+              <span style={{
+                backgroundColor: '#28a745',
+                color: 'white',
+                padding: '4px 12px',
+                borderRadius: '12px',
+                fontSize: '12px',
+                fontWeight: '500',
+              }}>
+                🔐 FHE Ready
+              </span>
+            )}
+            <ConnectButton />
+          </div>
         </div>
       </header>
 
@@ -106,31 +153,7 @@ function App() {
               </ul>
             </div>
           </div>
-        ) : !fheInitialized ? (
-          <div style={{ 
-            textAlign: 'center', 
-            padding: '60px 20px',
-            color: '#666'
-          }}>
-            <h2>Initializing FHE Encryption...</h2>
-            <p>Please wait while we set up the encryption system.</p>
-            <div style={{ 
-              width: '40px', 
-              height: '40px', 
-              border: '4px solid #f3f3f3',
-              borderTop: '4px solid #007bff',
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite',
-              margin: '20px auto'
-            }} />
-            <style>{`
-              @keyframes spin {
-                0% { transform: rotate(0deg); }
-                100% { transform: rotate(360deg); }
-              }
-            `}</style>
-          </div>
-        ) : (
+) : (
           <>
             {/* Error Display */}
             {error && (
