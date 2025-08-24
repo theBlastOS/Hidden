@@ -312,20 +312,7 @@ export function FileUpload({ onUploadSuccess, isLoading }: FileUploadProps) {
         </div>
       )}
 
-      {/* 说明信息 */}
-      <div style={{ 
-        marginTop: '16px', 
-        padding: '12px', 
-        backgroundColor: '#fff3cd', 
-        borderRadius: '4px',
-        border: '1px solid #ffeaa7'
-      }}>
-        <h4 style={{ marginBottom: '8px', color: '#856404' }}>📌 Demo Mode</h4>
-        <p style={{ margin: '0', color: '#856404', fontSize: '14px' }}>
-          This is a demo implementation. Files are not actually uploaded to IPFS. 
-          A fake IPFS hash will be generated for testing purposes.
-        </p>
-      </div>
+     
     </div>
   );
 }

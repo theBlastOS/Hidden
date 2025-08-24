@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAccount, useWalletClient, usePublicClient } from 'wagmi';
 import { IPFS_ENCRYPTED_STORAGE_ABI, CONTRACT_ADDRESSES } from '@/contracts/IPFSEncryptedStorage';
-import { encryptAddresses, decryptAddresses, isFHEInitialized } from '@/utils/fheUtils';
+import { encryptAddresses, decryptAddresses, isFHEInitialized, onFHEInitialized } from '@/utils/fheUtils';
 import { ipfsHashToAddresses, addressesToIPFSHash, removeQmPrefix, addQmPrefix } from '@/utils/ipfsUtils';
 import { StorageEntry } from '@/types';
 
@@ -17,8 +17,19 @@ export function useIPFSStorage() {
   // Load user storage entries when address changes
   useEffect(() => {
     if (address && publicClient && isFHEInitialized()) {
-      loadUserStorageEntries();
+      void loadUserStorageEntries();
     }
+  }, [address, publicClient]);
+
+  // Subscribe to FHE initialization to reload entries when FHE becomes available
+  useEffect(() => {
+    const unsubscribe = onFHEInitialized(() => {
+      if (address && publicClient) {
+        void loadUserStorageEntries();
+      }
+    });
+
+    return unsubscribe;
   }, [address, publicClient]);
 
   const loadUserStorageEntries = async () => {

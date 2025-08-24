@@ -3,6 +3,7 @@ import { initSDK } from '@zama-fhe/relayer-sdk/bundle';
 
 let fheInstance: any | null = null;
 let isInitialized = false;
+const initCallbacks: (() => void)[] = [];
 
 /**
  * Initialize the FHE instance
@@ -28,6 +29,9 @@ export async function initFHE(): Promise<any> {
 
     fheInstance = await createInstance(config);
     isInitialized = true;
+
+    // Notify all callbacks that FHE is now initialized
+    initCallbacks.forEach(callback => callback());
 
     return fheInstance;
   } catch (error) {
@@ -155,4 +159,27 @@ export function getFHEInstance(): any {
  */
 export function isFHEInitialized(): boolean {
   return isInitialized && fheInstance !== null;
+}
+
+/**
+ * Subscribe to FHE initialization events
+ * @param callback Function to call when FHE is initialized
+ * @returns Unsubscribe function
+ */
+export function onFHEInitialized(callback: () => void): () => void {
+  if (isInitialized) {
+    // If already initialized, call immediately
+    setTimeout(callback, 0);
+  } else {
+    // Otherwise add to callbacks
+    initCallbacks.push(callback);
+  }
+
+  // Return unsubscribe function
+  return () => {
+    const index = initCallbacks.indexOf(callback);
+    if (index > -1) {
+      initCallbacks.splice(index, 1);
+    }
+  };
 }

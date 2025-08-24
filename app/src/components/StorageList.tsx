@@ -133,6 +133,47 @@ export function StorageList({
                 <p><strong>Owner:</strong> {entry.owner}</p>
                 <p><strong>Status:</strong> {entry.isOwner ? 'Owner' : 'Authorized User'}</p>
                 <p><strong>Has Access:</strong> {entry.hasAccess ? 'Yes' : 'No'}</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span><strong>IPFS Hash:</strong></span>
+                  {retrievedHashes[entry.id] ? (
+                    <>
+                      <span style={{ 
+                        fontFamily: 'monospace', 
+                        fontSize: '14px', 
+                        wordBreak: 'break-all',
+                        backgroundColor: '#e8f5e8',
+                        padding: '2px 4px',
+                        borderRadius: '2px',
+                        color: '#155724',
+                        flex: 1
+                      }}>
+                        {retrievedHashes[entry.id]}
+                      </span>
+                      <button
+                        onClick={() => navigator.clipboard.writeText(retrievedHashes[entry.id])}
+                        style={{ 
+                          padding: '2px 8px',
+                          fontSize: '12px',
+                          backgroundColor: '#007bff',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Copy
+                      </button>
+                    </>
+                  ) : (
+                    <span style={{ 
+                      fontFamily: 'monospace',
+                      color: '#666',
+                      fontStyle: 'italic'
+                    }}>
+                      ***
+                    </span>
+                  )}
+                </div>
               </div>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
@@ -189,40 +230,6 @@ export function StorageList({
               </div>
             </div>
 
-            {retrievedHashes[entry.id] && (
-              <div style={{ 
-                marginTop: '12px', 
-                padding: '12px', 
-                backgroundColor: '#e8f5e8', 
-                borderRadius: '4px',
-                border: '1px solid #c3e6c3'
-              }}>
-                <strong>Retrieved IPFS Hash:</strong>
-                <div style={{ 
-                  fontFamily: 'monospace', 
-                  fontSize: '14px', 
-                  wordBreak: 'break-all',
-                  marginTop: '4px'
-                }}>
-                  {retrievedHashes[entry.id]}
-                </div>
-                <button
-                  onClick={() => navigator.clipboard.writeText(retrievedHashes[entry.id])}
-                  style={{ 
-                    marginTop: '8px',
-                    padding: '4px 8px',
-                    fontSize: '12px',
-                    backgroundColor: '#007bff',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Copy to Clipboard
-                </button>
-              </div>
-            )}
 
             {selectedEntryForGrant === entry.id && (
               <div style={{ 
