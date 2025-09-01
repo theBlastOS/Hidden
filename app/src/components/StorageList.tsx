@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StorageEntry } from '../types/index';
+import { StorageEntry } from '../type/index.js';
 import { isFHEInitialized } from '../utils/fheUtils';
 
 interface StorageListProps {
