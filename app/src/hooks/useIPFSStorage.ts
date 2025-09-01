@@ -3,7 +3,7 @@ import { useAccount, useWalletClient, usePublicClient } from 'wagmi';
 import { IPFS_ENCRYPTED_STORAGE_ABI, CONTRACT_ADDRESSES } from '../contracts/IPFSEncryptedStorage';
 import { encryptAddresses, decryptAddresses, isFHEInitialized, onFHEInitialized } from '../utils/fheUtils';
 import { ipfsHashToAddresses, addressesToIPFSHash, removeQmPrefix, addQmPrefix } from '../utils/ipfsUtils';
-import { StorageEntry } from '../types';
+import { StorageEntry } from '../types/index';
 
 export function useIPFSStorage() {
   const { address } = useAccount();
