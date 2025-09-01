@@ -1,5 +1,6 @@
-import { createInstance, SepoliaConfig } from '@zama-fhe/relayer-sdk/bundle';
-import { initSDK } from '@zama-fhe/relayer-sdk/bundle';
+// Use CDN version instead of bundle imports for better production compatibility
+// import { createInstance, SepoliaConfig } from '@zama-fhe/relayer-sdk/bundle';
+// import { initSDK } from '@zama-fhe/relayer-sdk/bundle';
 
 let fheInstance: any | null = null;
 let isInitialized = false;
@@ -15,8 +16,11 @@ export async function initFHE(): Promise<any> {
 
   try {
     // Check if the global fhevm object is available (from CDN)
+    const { initSDK, createInstance, SepoliaConfig } = (window as any).fhevm;
 
-    // const { initSDK, createInstance } = (window as any).fhevm;
+    if (!initSDK || !createInstance || !SepoliaConfig) {
+      throw new Error('Zama FHE SDK not loaded from CDN. Please ensure the script tag is present.');
+    }
 
     // Initialize WASM
     await initSDK();
