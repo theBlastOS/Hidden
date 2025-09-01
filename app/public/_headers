@@ -1,0 +1,26 @@
+# 全局头部设置
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY  
+  X-XSS-Protection: 1; mode=block
+  Referrer-Policy: strict-origin-when-cross-origin
+
+# JavaScript 文件
+/*.js
+  Content-Type: application/javascript; charset=utf-8
+
+# ES 模块文件
+/*.mjs  
+  Content-Type: application/javascript; charset=utf-8
+
+# WebAssembly 文件
+/*.wasm
+  Content-Type: application/wasm
+
+# CSS 文件
+/*.css
+  Content-Type: text/css; charset=utf-8
+
+# JSON 文件
+/*.json
+  Content-Type: application/json; charset=utf-8
