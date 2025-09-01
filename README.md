@@ -4,6 +4,8 @@
 
 This is a decentralized IPFS hash encrypted storage solution based on Zama's Fully Homomorphic Encryption (FHE) technology. The project allows users to encrypt and store IPFS file hashes on the Ethereum blockchain while managing access permissions through smart contracts.
 
+https://hidden-zama.netlify.app/
+
 ## 🚀 Core Features
 
 ### 1. IPFS Hash Conversion and Encryption
