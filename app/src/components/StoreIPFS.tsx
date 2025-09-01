@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { isValidIPFSHash } from '@/utils/ipfsUtils';
-import { isFHEInitialized } from '@/utils/fheUtils';
+import { isValidIPFSHash } from '../utils/ipfsUtils';
+import { isFHEInitialized } from '../utils/fheUtils';
 
 interface StoreIPFSProps {
   onStore: (ipfsHash: string) => Promise<void>;

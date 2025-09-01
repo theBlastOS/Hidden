@@ -1,10 +1,10 @@
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount } from 'wagmi';
-import { useIPFSStorage } from '@/hooks/useIPFSStorage';
-import { StoreIPFS } from '@/components/StoreIPFS';
-import { StorageList } from '@/components/StorageList';
-import { FileUpload } from '@/components/FileUpload';
-import { initFHE, isFHEInitialized } from '@/utils/fheUtils';
+import { useIPFSStorage } from './hooks/useIPFSStorage';
+import { StoreIPFS } from './components/StoreIPFS';
+import { StorageList } from './components/StorageList';
+import { FileUpload } from './components/FileUpload';
+import { initFHE, isFHEInitialized } from './utils/fheUtils';
 import { useState } from 'react';
 
 function App() {

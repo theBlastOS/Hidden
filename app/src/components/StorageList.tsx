@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { StorageEntry } from '@/types';
-import { isFHEInitialized } from '@/utils/fheUtils';
+import { StorageEntry } from '../types';
+import { isFHEInitialized } from '../utils/fheUtils';
 
 interface StorageListProps {
   entries: StorageEntry[];
